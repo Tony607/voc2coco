@@ -130,7 +130,8 @@ def convert(xml_files, json_file):
         cat = {"supercategory": "none", "id": cid, "name": cate}
         json_dict["categories"].append(cat)
 
-    os.makedirs(os.path.dirname(json_file), exist_ok=True)
+    if os.path.dirname(json_file):
+        os.makedirs(os.path.dirname(json_file), exist_ok=True)
     json_fp = open(json_file, "w")
     json_str = json.dumps(json_dict)
     json_fp.write(json_str)
