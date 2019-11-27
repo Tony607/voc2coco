@@ -37,13 +37,13 @@ def get_and_check(root, name, length):
     return vars
 
 
-def get_filename_as_int(filename):
+def get_filename(filename):
     try:
         filename = filename.replace("\\", "/")
         filename = os.path.splitext(os.path.basename(filename))[0]
-        return int(filename)
+        return str(filename)
     except:
-        raise ValueError("Filename %s is supposed to be an integer." % (filename))
+        raise ValueError("Filename %s has a problem..." % (filename))
 
 
 def get_categories(xml_files):
@@ -84,7 +84,7 @@ def convert(xml_files, json_file):
         else:
             raise ValueError("%d paths found in %s" % (len(path), xml_file))
         ## The filename must be a number
-        image_id = get_filename_as_int(filename)
+        image_id = get_filename(filename)
         size = get_and_check(root, "size", 1)
         width = int(get_and_check(size, "width", 1).text)
         height = int(get_and_check(size, "height", 1).text)
