@@ -65,6 +65,22 @@ def get_categories(xml_files):
     classes_names.sort()
     return {name: i for i, name in enumerate(classes_names)}
 
+def _get_seg_from_bbox(points):
+    """
+    Get segments from bbox.
+    :param points:
+    :return:
+    """
+    min_x = points[0]
+    min_y = points[1]
+    max_x = points[2]
+    max_y = points[3]
+    h = max_y - min_y
+    w = max_x - min_x
+    a = []
+    a.append([min_x,min_y, min_x,min_y+0.5*h, min_x,max_y, min_x+0.5*w,max_y, max_x,max_y, max_x,max_y-0.5*h, max_x,min_y, max_x-0.5*w,min_y])
+    return a
+
 
 def convert(xml_files, json_file):
     json_dict = {"images": [], "type": "instances", "annotations": [], "categories": []}
@@ -73,6 +89,8 @@ def convert(xml_files, json_file):
     else:
         categories = get_categories(xml_files)
     bnd_id = START_BOUNDING_BOX_ID
+    img_id = 0
+    anno_id = 0
     for xml_file in xml_files:
         tree = ET.parse(xml_file)
         root = tree.getroot()
@@ -84,7 +102,7 @@ def convert(xml_files, json_file):
         else:
             raise ValueError("%d paths found in %s" % (len(path), xml_file))
         ## The filename must be a number
-        image_id = get_filename_as_int(filename)
+        # image_id = get_filename_as_int(filename)
         size = get_and_check(root, "size", 1)
         width = int(get_and_check(size, "width", 1).text)
         height = int(get_and_check(size, "height", 1).text)
@@ -92,7 +110,7 @@ def convert(xml_files, json_file):
             "file_name": filename,
             "height": height,
             "width": width,
-            "id": image_id,
+            "id": img_id,
         }
         json_dict["images"].append(image)
         ## Currently we do not support segmentation.
@@ -105,10 +123,11 @@ def convert(xml_files, json_file):
                 categories[category] = new_id
             category_id = categories[category]
             bndbox = get_and_check(obj, "bndbox", 1)
-            xmin = int(get_and_check(bndbox, "xmin", 1).text) - 1
-            ymin = int(get_and_check(bndbox, "ymin", 1).text) - 1
-            xmax = int(get_and_check(bndbox, "xmax", 1).text)
-            ymax = int(get_and_check(bndbox, "ymax", 1).text)
+            xmin = float(get_and_check(bndbox, "xmin", 1).text)
+            ymin = float(get_and_check(bndbox, "ymin", 1).text)
+            xmax = float(get_and_check(bndbox, "xmax", 1).text)
+            ymax = float(get_and_check(bndbox, "ymax", 1).text)
+            segs = _get_seg_from_bbox([xmin, ymin, xmax, ymax])
             assert xmax > xmin
             assert ymax > ymin
             o_width = abs(xmax - xmin)
@@ -116,18 +135,21 @@ def convert(xml_files, json_file):
             ann = {
                 "area": o_width * o_height,
                 "iscrowd": 0,
-                "image_id": image_id,
+                "image_id": img_id,
                 "bbox": [xmin, ymin, o_width, o_height],
-                "category_id": category_id,
-                "id": bnd_id,
+                "category_id": category_id+1,
+                "id": anno_id,
                 "ignore": 0,
-                "segmentation": [],
+                "segmentation": segs,
             }
             json_dict["annotations"].append(ann)
             bnd_id = bnd_id + 1
+            anno_id += 1
+        img_id += 1
 
     for cate, cid in categories.items():
-        cat = {"supercategory": "none", "id": cid, "name": cate}
+        supercategory, _ = cate.split("_", 1)[0], cate.split("_")[1]
+        cat = {"supercategory": supercategory, "id": cid+1, "name": cate}
         json_dict["categories"].append(cat)
 
     os.makedirs(os.path.dirname(json_file), exist_ok=True)
