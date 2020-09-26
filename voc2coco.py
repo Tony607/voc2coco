@@ -48,10 +48,10 @@ def get_filename_as_int(filename):
 
 def get_categories(xml_files):
     """Generate category name to id mapping from a list of xml files.
-    
+
     Arguments:
         xml_files {list} -- A list of xml file paths.
-    
+
     Returns:
         dict -- category name to id mapping.
     """
@@ -63,7 +63,7 @@ def get_categories(xml_files):
             classes_names.append(member[0].text)
     classes_names = list(set(classes_names))
     classes_names.sort()
-    return {name: i for i, name in enumerate(classes_names)}
+    return {name: i+1 for i, name in enumerate(classes_names)}
 
 
 def convert(xml_files, json_file):
