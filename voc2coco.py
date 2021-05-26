@@ -9,7 +9,9 @@ import xml.etree.ElementTree as ET
 import glob
 
 START_BOUNDING_BOX_ID = 1
-PRE_DEFINE_CATEGORIES = None
+PRE_DEFINE_CATEGORIES = {"signature_block": 1,
+                         "initial_block": 2,
+                         "negative_class": 3}
 # If necessary, pre-define category and its id
 #  PRE_DEFINE_CATEGORIES = {"aeroplane": 1, "bicycle": 2, "bird": 3, "boat": 4,
 #  "bottle":5, "bus": 6, "car": 7, "cat": 8, "chair": 9,
@@ -35,15 +37,6 @@ def get_and_check(root, name, length):
     if length == 1:
         vars = vars[0]
     return vars
-
-
-def get_filename_as_int(filename):
-    try:
-        filename = filename.replace("\\", "/")
-        filename = os.path.splitext(os.path.basename(filename))[0]
-        return int(filename)
-    except:
-        raise ValueError("Filename %s is supposed to be an integer." % (filename))
 
 
 def get_categories(xml_files):
@@ -73,7 +66,7 @@ def convert(xml_files, json_file):
     else:
         categories = get_categories(xml_files)
     bnd_id = START_BOUNDING_BOX_ID
-    for xml_file in xml_files:
+    for idx, xml_file in enumerate(xml_files):
         tree = ET.parse(xml_file)
         root = tree.getroot()
         path = get(root, "path")
@@ -83,8 +76,8 @@ def convert(xml_files, json_file):
             filename = get_and_check(root, "filename", 1).text
         else:
             raise ValueError("%d paths found in %s" % (len(path), xml_file))
-        ## The filename must be a number
-        image_id = get_filename_as_int(filename)
+        # The 'index' is given as img_id
+        image_id = idx
         size = get_and_check(root, "size", 1)
         width = int(get_and_check(size, "width", 1).text)
         height = int(get_and_check(size, "height", 1).text)
@@ -105,10 +98,10 @@ def convert(xml_files, json_file):
                 categories[category] = new_id
             category_id = categories[category]
             bndbox = get_and_check(obj, "bndbox", 1)
-            xmin = int(get_and_check(bndbox, "xmin", 1).text) - 1
-            ymin = int(get_and_check(bndbox, "ymin", 1).text) - 1
-            xmax = int(get_and_check(bndbox, "xmax", 1).text)
-            ymax = int(get_and_check(bndbox, "ymax", 1).text)
+            xmin = int(float(get_and_check(bndbox, "xmin", 1).text)) - 1
+            ymin = int(float(get_and_check(bndbox, "ymin", 1).text)) - 1
+            xmax = int(float(get_and_check(bndbox, "xmax", 1).text))
+            ymax = int(float(get_and_check(bndbox, "ymax", 1).text))
             assert xmax > xmin
             assert ymax > ymin
             o_width = abs(xmax - xmin)
