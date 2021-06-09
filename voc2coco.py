@@ -136,8 +136,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Convert Pascal VOC annotation to COCO format."
     )
-    parser.add_argument("xml_dir", help="Directory path to xml files.", type=str)
-    parser.add_argument("json_file", help="Output COCO format json file.", type=str)
+    parser.add_argument("--xml_dir", help="Directory path to xml files.", type=str)
+    parser.add_argument("--json_file", help="Output COCO format json file.", type=str)
     args = parser.parse_args()
     xml_files = glob.glob(os.path.join(args.xml_dir, "*.xml"))
 
