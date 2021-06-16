@@ -9,9 +9,7 @@ import xml.etree.ElementTree as ET
 import glob
 
 START_BOUNDING_BOX_ID = 1
-PRE_DEFINE_CATEGORIES = {"signature_block": 1,
-                         "initial_block": 2,
-                         "negative_class": 3}
+
 # If necessary, pre-define category and its id
 #  PRE_DEFINE_CATEGORIES = {"aeroplane": 1, "bicycle": 2, "bird": 3, "boat": 4,
 #  "bottle":5, "bus": 6, "car": 7, "cat": 8, "chair": 9,
