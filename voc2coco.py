@@ -37,15 +37,6 @@ def get_and_check(root, name, length):
     return vars
 
 
-def get_filename_as_int(filename):
-    try:
-        filename = filename.replace("\\", "/")
-        filename = os.path.splitext(os.path.basename(filename))[0]
-        return int(filename)
-    except:
-        raise ValueError("Filename %s is supposed to be an integer." % (filename))
-
-
 def get_categories(xml_files):
     """Generate category name to id mapping from a list of xml files.
     
@@ -73,7 +64,7 @@ def convert(xml_files, json_file):
     else:
         categories = get_categories(xml_files)
     bnd_id = START_BOUNDING_BOX_ID
-    for xml_file in xml_files:
+    for idx, xml_file in enumerate(xml_files):
         tree = ET.parse(xml_file)
         root = tree.getroot()
         path = get(root, "path")
@@ -83,8 +74,8 @@ def convert(xml_files, json_file):
             filename = get_and_check(root, "filename", 1).text
         else:
             raise ValueError("%d paths found in %s" % (len(path), xml_file))
-        ## The filename must be a number
-        image_id = get_filename_as_int(filename)
+        # The 'index' is given as img_id
+        image_id = idx
         size = get_and_check(root, "size", 1)
         width = int(get_and_check(size, "width", 1).text)
         height = int(get_and_check(size, "height", 1).text)
@@ -105,10 +96,10 @@ def convert(xml_files, json_file):
                 categories[category] = new_id
             category_id = categories[category]
             bndbox = get_and_check(obj, "bndbox", 1)
-            xmin = int(get_and_check(bndbox, "xmin", 1).text) - 1
-            ymin = int(get_and_check(bndbox, "ymin", 1).text) - 1
-            xmax = int(get_and_check(bndbox, "xmax", 1).text)
-            ymax = int(get_and_check(bndbox, "ymax", 1).text)
+            xmin = int(float(get_and_check(bndbox, "xmin", 1).text)) - 1
+            ymin = int(float(get_and_check(bndbox, "ymin", 1).text)) - 1
+            xmax = int(float(get_and_check(bndbox, "xmax", 1).text))
+            ymax = int(float(get_and_check(bndbox, "ymax", 1).text))
             assert xmax > xmin
             assert ymax > ymin
             o_width = abs(xmax - xmin)
@@ -143,8 +134,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Convert Pascal VOC annotation to COCO format."
     )
-    parser.add_argument("xml_dir", help="Directory path to xml files.", type=str)
-    parser.add_argument("json_file", help="Output COCO format json file.", type=str)
+    parser.add_argument("--xml_dir", help="Directory path to xml files.", type=str)
+    parser.add_argument("--json_file", help="Output COCO format json file.", type=str)
     args = parser.parse_args()
     xml_files = glob.glob(os.path.join(args.xml_dir, "*.xml"))
 
