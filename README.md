@@ -5,6 +5,7 @@
 Then you can run the `voc2coco.py` script to generate a COCO data formatted JSON file for you.
 ```
 python voc2coco.py ./data/VOC/Annotations ./data/coco/output.json
+python voc2coco_rotate.py ./data/VOC/Annotations ./data/coco/output.json
 ```
 Then you can run the following Jupyter notebook to visualize the coco annotations. `COCO_Image_Viewer.ipynb`
 
